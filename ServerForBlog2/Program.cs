@@ -1,10 +1,28 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using System.Net;
 using System.Net.Sockets;
+using System.Text.Json;
+using LocalServer;
 
 Task acceptTask = Task.Run(() => AcceptInput());
 
-IPAddress address = IPAddress.Parse("127.0.0.1");
+Setting? setting = new Setting();
+try {
+    using (FileStream stream = File.OpenRead("setting.json")) {
+        setting = await JsonSerializer.DeserializeAsync<Setting>(stream);
+    }
+} catch {
+    Console.WriteLine("failed to load \"setting.json\"");
+    return;
+}
+
+if (setting == null) {
+    Console.WriteLine("failed to initialize...");
+    return;
+}
+
+Console.WriteLine($"{setting.IPAddress}");
+IPAddress address = IPAddress.Parse(setting.IPAddress);
 TcpListener server = new TcpListener(address, 80);
 server.Start();
 
@@ -14,7 +32,7 @@ while (true) {
 
     NetworkStream stream = client.GetStream();
     try {
-        string root = @"C:\Users\nsjag\OneDrive\Programs\testWeb";
+        string root = setting.RootDir;
 
         using (StreamReader sr = new StreamReader(stream))
         using (StreamWriter sw = new StreamWriter(stream)){
