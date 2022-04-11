@@ -26,6 +26,7 @@ IPAddress address = IPAddress.Parse(setting.IPAddress);
 TcpListener server = new TcpListener(address, 80);
 server.Start();
 
+
 while (true) {
     Console.WriteLine("waiting...");
     TcpClient client = await server.AcceptTcpClientAsync();
