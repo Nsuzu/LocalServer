@@ -31,41 +31,41 @@ while (true) {
     TcpClient client = await server.AcceptTcpClientAsync();
 
     NetworkStream stream = client.GetStream();
+    ResponseWriter responseWriter = new ResponseWriter(stream);
     try {
         string root = setting.RootDir;
 
-        using (StreamReader sr = new StreamReader(stream))
-        using (StreamWriter sw = new StreamWriter(stream)){
+        using (StreamReader sr = new StreamReader(stream)) {
+            StreamWriter sw = new StreamWriter(stream);
             string? reqLine = sr.ReadLine();
 
             string path = GetRequestedFile(reqLine);
-            string content = await GetFileContent(root + path);
 
             Console.WriteLine(reqLine);
             while (sr.Peek() > -1) {
                 Console.WriteLine(sr.ReadLine());
             }
 
-            
             Console.WriteLine("writing start");
+            string contentType = GetContentType(path);
 
             sw.WriteLine("HTTP/1.1 200 OK");
-            sw.WriteLine($"Content-Type: {GetContentType(path)}; charset=UTF-8");
+            sw.WriteLine($"Content-Type: {contentType}; charset=UTF-8");
             sw.WriteLine("");
 
-            if (path.Contains("jpg") || path.Contains("png")) {
-                byte[] bytes = GetImageContent(root + path);
-                BinaryWriter bw = new BinaryWriter(stream);
-                bw.Write(bytes);
-                bw.Close();
-
-                foreach(byte b in bytes) {
-                    Console.Write(b);
+            if (contentType.Contains("image")) {
+                using (BinaryWriter bw = new BinaryWriter(stream)) {
+                    responseWriter.WriteImageContent(root + path, bw);
                 }
+
+            } else if (contentType.Contains("html") || contentType.Contains("css")) {
+                responseWriter.WriteFileContent(root + path, sw);
+                sw.Close();
+
             } else {
-                sw.Write(content);
+                Console.WriteLine($"unexpected: {contentType}");
+                sw.Close();
             }
-              
 
         }
         
@@ -85,28 +85,6 @@ string GetRequestedFile(string? str) {
     return path;
 }
 
-async Task<string> GetFileContent(string filePath) {
-    string content;
-    try {
-        using (StreamReader reader = new StreamReader(filePath)) {
-            content = await reader.ReadToEndAsync() + "\n";
-
-        }
-    } catch (Exception e) {
-        content = e.ToString() + "\n";
-    }
-
-    return content;
-}
-
-byte[] GetImageContent(string filePath) {
-    FileStream stream = File.OpenRead(filePath);
-    byte[] bytes;
-    using (BinaryReader reader = new BinaryReader(stream)) {
-        bytes = reader.ReadBytes((int)stream.Length);
-    }
-    return bytes;
-}
 
 string GetContentType(string path) {
     if (!path.Contains('.')) return "text/plain";
