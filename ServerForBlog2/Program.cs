@@ -25,8 +25,6 @@ Console.WriteLine($"{setting.IPAddress}");
 IPAddress address = IPAddress.Parse(setting.IPAddress);
 TcpListener server = new TcpListener(address, 80);
 server.Start();
-//Is this main?
-//where? 21:54
 
 while (true) {
     Console.WriteLine("waiting...");
