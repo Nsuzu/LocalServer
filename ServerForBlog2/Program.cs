@@ -5,7 +5,6 @@ using System.Text.Json;
 using LocalServer;
 
 Task acceptTask = Task.Run(() => AcceptInput());
-
 Setting? setting = new Setting();
 try {
     using (FileStream stream = File.OpenRead("setting.json")) {
