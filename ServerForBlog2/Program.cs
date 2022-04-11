@@ -15,6 +15,7 @@ try {
     Console.WriteLine("failed to load \"setting.json\"");
     return;
 }
+//where?
 
 if (setting == null) {
     Console.WriteLine("failed to initialize...");
