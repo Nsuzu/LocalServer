@@ -21,7 +21,6 @@ if (setting == null) {
     return;
 }
 
-Console.WriteLine($"{setting.IPAddress}");
 IPAddress address = IPAddress.Parse(setting.IPAddress);
 TcpListener server = new TcpListener(address, 80);
 server.Start();
@@ -44,7 +43,8 @@ while (true) {
 
             Console.WriteLine(reqLine);
             while (sr.Peek() > -1) {
-                Console.WriteLine(sr.ReadLine());
+                string? str = sr.ReadLine();
+                if(str != null) Console.WriteLine(str);
             }
 
             Console.WriteLine("writing start");
@@ -57,9 +57,10 @@ while (true) {
             if (contentType.Contains("image")) {
                 using (BinaryWriter bw = new BinaryWriter(stream)) {
                     responseWriter.WriteImageContent(root + path, bw);
+                    bw.Close();
                 }
 
-            } else if (contentType.Contains("html") || contentType.Contains("css")) {
+            } else if (contentType.Contains("text")) {
                 responseWriter.WriteFileContent(root + path, sw);
                 sw.Close();
 
@@ -97,7 +98,8 @@ string GetContentType(string path) {
         "css" => "text/css",
         "jpg" => "image/jpeg",
         "png" => "image/png",
-        _ => "text/plain"
+        "js" => "text/javascript",
+        _ => "unexpected"
     };
 
     return contentType;
